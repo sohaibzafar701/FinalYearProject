@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Serpentine Path Planning</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB2mlluC7u3AwWzrTQ8LGib4tPota5RuTI&libraries=drawing,geometry"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <style>
+    #map { height: 500px; width: 100%; }
+  </style>
+</head>
+<body class="bg-gray-100">
+  
+  <header class="bg-green-600 p-6 shadow-lg text-center text-white">
+    <h1 class="text-4xl font-bold">Forest Tree Classification System - Zigzag Mapping</h1>
+  </header>
+
+  <main class="container mx-auto mt-8 px-6">
+    <div class="bg-white rounded-lg shadow-lg p-8">
+      <h2 class="text-3xl font-semibold text-gray-800 text-center">Select Forest Area</h2>
+      <div id="map" class="mt-6"></div>
+      <p id="calculated-area" class="mt-4 text-center text-gray-700 font-medium"></p>
+      
+      <div class="text-center mt-4">
+        <label for="altitude" class="text-lg">Altitude (meters)</label>
+        <input type="number" id="altitude" class="border rounded px-4 py-2 mt-2" placeholder="Enter altitude" required>
+
+        <label for="speed" class="text-lg mt-4">Speed (m/s)</label>
+        <input type="number" id="speed" class="border rounded px-4 py-2 mt-2" placeholder="Enter speed" required>
+
+        <label for="gimbal-angle" class="text-lg mt-4">Gimbal Angle (degrees)</label>
+        <input type="number" id="gimbal-angle" class="border rounded px-4 py-2 mt-2" placeholder="Enter gimbal angle" required>
+      </div>
+
+      <div class="text-center mt-4">
+        <button id="generate-path" class="bg-green-600 text-white px-4 py-2 rounded-lg shadow">Generate Path</button>
+      </div>
+
+      <div class="text-center mt-4">
+        <button id="download-kmz" class="bg-blue-600 text-white px-4 py-2 rounded-lg shadow">Download KMZ</button>
+      </div>
+    </div>
+  </main>
+
+  <footer class="mt-16 bg-gray-800 py-6 text-center text-gray-400">
+    &copy; 2024 Forest Tree Classification System. All rights reserved.
+  </footer>
+
+  <script>
+    let map;
+    let drawingManager;
+    let selectedArea;
+    let mappedPath = []; // Global mappedPath for easy access
+    const cellAreaMeters = 5260.913; // 1.3 acres in square meters
+    const cellSideLength = Math.sqrt(cellAreaMeters); // Calculate cell side length
+
+    function initMap() {
+      map = new google.maps.Map(document.getElementById("map"), {
+        center: { lat: 37.7749, lng: -122.4194 },
+        zoom: 10,
+      });
+
+      drawingManager = new google.maps.drawing.DrawingManager({
+        drawingMode: google.maps.drawing.OverlayType.POLYGON,
+        drawingControl: true,
+        drawingControlOptions: {
+          position: google.maps.ControlPosition.TOP_CENTER,
+          drawingModes: ["polygon"],
+        },
+      });
+      drawingManager.setMap(map);
+
+      google.maps.event.addListener(drawingManager, "overlaycomplete", (event) => {
+        if (selectedArea) selectedArea.setMap(null);
+        selectedArea = event.overlay;
+        calculateArea(selectedArea);
+      });
+
+      document.getElementById("generate-path").addEventListener("click", () => {
+        if (selectedArea) {
+          mappedPath = []; // Clear previous path data
+          generateGridAndPath(selectedArea);
+        } else {
+          alert("Please select an area first.");
+        }
+      });
+
+      document.getElementById("download-kmz").addEventListener("click", () => {
+        if (mappedPath.length > 0) {
+          const kmlContent = generateKML(mappedPath);
+          generateKMZ(kmlContent);
+        } else {
+          alert("Please generate a path first.");
+        }
+      });
+    }
+
+    function calculateArea(polygon) {
+      const path = polygon.getPath();
+      const areaMeters = google.maps.geometry.spherical.computeArea(path);
+      const totalAreaAcres = areaMeters * 0.000247105;
+      document.getElementById("calculated-area").innerText = `Total Forest Area: ${totalAreaAcres.toFixed(2)} acres`;
+    }
+
+    function generateGridAndPath(polygon) {
+      const bounds = new google.maps.LatLngBounds();
+      polygon.getPath().forEach((latLng) => bounds.extend(latLng));
+      const sw = bounds.getSouthWest();
+      const ne = bounds.getNorthEast();
+
+      // Generate rows of cells
+      for (let lat = sw.lat(); lat < ne.lat(); lat += cellSideLength / 111111) {
+        for (let lng = sw.lng(); lng < ne.lng(); lng += cellSideLength / (111111 * Math.cos(lat * (Math.PI / 180)))) {
+          const centerLatLng = new google.maps.LatLng(lat + cellSideLength / (2 * 111111), lng + cellSideLength / (2 * 111111));
+          const cellBounds = {
+            north: lat + cellSideLength / 111111,
+            south: lat,
+            east: lng + cellSideLength / (111111 * Math.cos(lat * (Math.PI / 180))),
+            west: lng
+          };
+
+          if (google.maps.geometry.poly.containsLocation(centerLatLng, polygon)) {
+            const waypoint = {
+              center: centerLatLng,
+              bounds: cellBounds,
+              altitude: document.getElementById("altitude").value || 100,
+              speed: document.getElementById("speed").value || 5,
+              gimbalAngle: document.getElementById("gimbal-angle").value || -30
+            };
+            mappedPath.push(waypoint); // Add waypoint to array
+          }
+        }
+      }
+      visualizeGrid();
+    }
+
+    function visualizeGrid() {
+      mappedPath.forEach((cell) => {
+        new google.maps.Rectangle({
+          strokeColor: "#FF0000",
+          strokeOpacity: 0.8,
+          strokeWeight: 2,
+          fillColor: "#FF9999",
+          fillOpacity: 0.5,
+          map,
+          bounds: {
+            north: cell.bounds.north,
+            south: cell.bounds.south,
+            east: cell.bounds.east,
+            west: cell.bounds.west
+          }
+        });
+      });
+    }
+
+    function generateKML(mappedPath) {
+      const kmlHeader = `<?xml version="1.0" encoding="UTF-8"?>
+        <kml xmlns="http://www.opengis.net/kml/2.2">
+          <Document>
+            <name>Drone Path</name>
+            <description>Generated drone flight path</description>`;
+
+      let kmlBody = '';
+      mappedPath.forEach((cell, index) => {
+        const lat = cell.center.lat();
+        const lng = cell.center.lng();
+        const altitude = cell.altitude;
+        const speed = cell.speed;
+        const gimbalAngle = cell.gimbalAngle;
+
+        // Add waypoint to KML body
+        kmlBody += `
+          <Placemark>
+            <name>Waypoint ${index + 1}</name>
+            <Point>
+              <coordinates>${lng},${lat},${altitude}</coordinates>
+            </Point>
+            <description>
+              Speed: ${speed} m/s<br>
+              Gimbal Angle: ${gimbalAngle}°<br>
+              Altitude: ${altitude} meters
+            </description>
+            <altitudeMode>absolute</altitudeMode>
+          </Placemark>`;
+      });
+
+      const kmlFooter = `
+          </Document>
+        </kml>`;
+      return kmlHeader + kmlBody + kmlFooter;
+    }
+
+    function generateKMZ(kmlContent) {
+      const zip = new JSZip();
+      zip.file("waylines.kml", kmlContent);
+      zip.generateAsync({ type: "blob" }).then(function(content) {
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(content);
+        link.download = "output.kmz";
+        link.click();
+      });
+    }
+
+    window.onload = initMap;
+  </script>
+</body>
+</html>
