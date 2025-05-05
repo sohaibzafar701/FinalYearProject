@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Forest Tree Classification System</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 flex flex-col min-h-screen">
+  <main class="flex-grow">
+
+
+  <!-- Header Section -->
+  <header class="bg-green-600 p-6 shadow-lg">
+    <div class="container mx-auto text-center">
+      <a href="{{ url_for('index') }}">
+        <h1 class="text-4xl font-bold text-white hover:underline cursor-pointer">
+        Forest Trees Classification System
+        </h1>
+      </a>      <p class="text-lg text-green-200 mt-2">Using Aerial Imagery for Tree Species and Age Classification</p>
+    </div>
+  </header>
+
+  <!-- Main Content Section -->
+  <main class="container mx-auto mt-12 px-6">
+    <div class="bg-white rounded-lg shadow-lg p-8">
+      <!-- Introduction -->
+      <section class="text-center">
+        <h2 class="text-3xl font-semibold text-gray-800">Welcome to Our Forest Monitoring System</h2>
+        <p class="mt-4 text-gray-600 leading-relaxed">
+          This system utilizes advanced drone technology and aerial imagery to classify tree species and determine their age within a forested area.
+          Drones equipped with optical cameras, enabling accurate classification of tree species and age.
+        </p>
+      </section>
+
+      <!-- Instructions -->
+      <section class="mt-8">
+        <h3 class="text-2xl font-semibold text-gray-700 text-center">Features</h3>
+        <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="bg-gray-50 p-6 rounded-lg shadow">
+            <h4 class="text-lg font-medium text-green-700">Path Planning</h4>
+            <p class="text-gray-600 mt-2">Plan the drone's path to efficiently cover the entire forest area, using Google Maps for accurate navigation.</p>
+            <a href="{{ url_for('djipath') }}" class="inline-block px-8 py-4 bg-green-600 text-white font-semibold text-lg rounded-full hover:bg-green-700">
+              Go to Path Planning
+            </a> 
+          </div>
+          
+          <div class="bg-gray-50 p-6 rounded-lg shadow">
+            <h4 class="text-lg font-medium text-green-700">Species and Age Detection using Optical Image</h4>
+            <p class="text-gray-600 mt-2">Identify tree species and classify their age using high-quality data from optical imagery.</p>
+            <a href="{{ url_for('optical_images') }}" class="inline-block px-8 py-4 bg-green-600 text-white font-semibold text-lg rounded-full hover:bg-green-700">
+              Go to Species and Age Detection using Optical Image
+            </a>
+           
+          </div>
+          
+          <div class="bg-gray-50 p-6 rounded-lg shadow md:col-span-2 flex flex-col items-center text-center">
+            <h4 class="text-lg font-medium text-green-700">Data Visualization</h4>
+            <p class="text-gray-600 mt-2 max-w-xl">Visualize results with charts, providing insights into tree distribution, species count, and age demographics.</p>
+            <a href="{{ url_for('data_visualization') }}" class="mt-4 inline-block px-8 py-4 bg-green-600 text-white font-semibold text-lg rounded-full hover:bg-green-700">
+              Go to Data Visualization
+            </a>
+          </div>
+          
+           
+        </div>
+      </section>
+
+
+    </div>
+  </main>
+</main>
+  <!-- Footer Section -->
+  <footer class="mt-16 bg-gray-800 py-6">
+    <div class="container mx-auto text-center text-gray-400">
+      <p>&copy; 2024 Forest Tree Classification System. All rights reserved.</p>
+    </div>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Forest Tree Classification System</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 flex flex-col min-h-screen">
+
+  <!-- Header -->
+  <header class="bg-green-600 p-6 shadow-lg">
+    <div class="container mx-auto text-center">
+      <a href="{{ url_for('index') }}">
+        <h1 class="text-4xl font-bold text-white hover:underline cursor-pointer">
+        Forest Trees Classification System
+        </h1>
+      </a>      
+      <p class="text-lg text-green-200 mt-2">Species and Age Detection using Optical Images</p>
+    </div>
+  </header>
+
+  <!-- Main Section -->
+  <main class="flex-grow container mx-auto mt-12 px-6">
+    <div class="bg-white rounded-lg shadow-lg p-8">
+      
+      <!-- File Upload Form -->
+      <form method="POST" enctype="multipart/form-data" name="form1" class="space-y-6 text-center">
+        <!-- Drag and Drop Area -->
+        <div id="drop-area" 
+             class="border-2 border-dashed border-green-600 rounded-lg p-12 text-center bg-gray-50 hover:bg-green-100 transition"
+             ondragover="handleDragOver(event)" 
+             ondragleave="handleDragLeave()" 
+             ondrop="handleDrop(event)">
+          <p class="text-lg text-gray-700">Drag & Drop your image here</p>
+          <p class="text-sm text-gray-500">or click the button below to upload</p>
+          <input type="file" name="file" id="imageUpload" accept="image/*" class="hidden" onchange="updatePreview()" multiple>
+          <label for="imageUpload" class="mt-4 inline-block px-6 py-3 bg-green-600 text-white font-semibold rounded-lg cursor-pointer hover:bg-green-700">
+            Select Image
+          </label>
+        </div>
+
+        <!-- Image Preview -->
+        <div class="mt-6 text-center">
+          <img id="image-preview" class="hidden mx-auto rounded-lg shadow-md w-64 h-64 object-cover">
+        </div>
+
+        <!-- Detect Button -->
+        <div class="text-center">
+          <button type="submit" class="px-8 py-4 bg-green-600 text-white font-semibold text-lg rounded-full hover:bg-green-700">
+            Detect
+          </button>
+        </div>
+      </form>
+
+      <!-- Result Image -->
+      <!-- <div class="mt-10 text-center">
+        <img id="my-image" style="display: none;" class="mx-auto rounded-lg shadow-lg" src="{{ image_path }}" />
+      </div> -->
+
+            <!-- Results Section -->
+      <div class="mt-8">
+        <h3 class="text-2xl font-semibold text-gray-700 text-center">Detection Results</h3>
+        
+        <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Species Result -->
+          <div class="bg-gray-50 p-6 rounded-lg shadow">
+            <h4 class="text-lg font-medium text-green-700">Detected Species</h4>
+            <pre id="species-result" class="text-gray-600 mt-2 whitespace-pre-wrap">
+              {% if detection_result is not none %}
+              Palm Trees Detected: {{ 'True' if detection_result else 'False' }}
+              {% else %}
+              Awaiting results...
+              {% endif %}
+            </pre>
+          </div>
+
+          <!-- Age Result -->
+          <div class="bg-gray-50 p-6 rounded-lg shadow">
+            <h4 class="text-lg font-medium text-green-700">Estimated Age</h4>
+            <pre class="text-gray-600 mt-2 whitespace-pre-wrap">
+              {% if ages %}
+                {% for age in ages %}
+                  • {{ age }}
+                {% endfor %}
+              {% else %}
+                Not available
+              {% endif %}
+            </pre>
+          </div>
+
+
+        </div>
+
+        <!-- Detection Image Styled as Full-width Box -->
+        {% if image_path %}
+        <div class="mt-6 bg-gray-50 p-6 rounded-lg shadow">
+          <h4 class="text-lg font-medium text-green-700 text-center mb-4">Results Image</h4>
+          <img src="{{ image_path }}" alt="Detection Result" class="mx-auto max-w-full rounded-lg shadow-md">
+        </div>
+        {% endif %}
+      </div>
+
+
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="mt-16 bg-gray-800 py-6">
+    <div class="container mx-auto text-center text-gray-400">
+      <p>&copy; 2024 Forest Tree Classification System. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <!-- Script Section -->
+  <script>
+    function handleDragOver(event) {
+      event.preventDefault();
+      document.getElementById("drop-area").classList.add("bg-green-200");
+    }
+
+    function handleDragLeave() {
+      document.getElementById("drop-area").classList.remove("bg-green-200");
+    }
+
+    function handleDrop(event) {
+      event.preventDefault();
+      document.getElementById("drop-area").classList.remove("bg-green-200");
+      const fileInput = document.getElementById("imageUpload");
+      fileInput.files = event.dataTransfer.files;
+      updatePreview();
+    }
+
+    function updatePreview() {
+      const fileInput = document.getElementById("imageUpload");
+      const preview = document.getElementById("image-preview");
+
+      if (fileInput.files.length > 0) {
+        const file = fileInput.files[0];
+        const reader = new FileReader();
+
+        reader.onload = function (e) {
+          preview.src = e.target.result;
+          preview.classList.remove("hidden");
+        };
+
+        reader.readAsDataURL(file);
+      }
+    }
+
+    document.getElementById("my-image").onload = function () {
+      this.style.display = "block";
+    };
+  </script>
+
+</body>
+</html>
