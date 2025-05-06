@@ -8,6 +8,25 @@
 </head>
 <body class="bg-gray-100 flex flex-col min-h-screen">
 
+
+<!-- Navigation Bar -->
+<nav class="bg-green-700 p-4 shadow">
+  <div class="container mx-auto flex justify-between items-center">
+    <a href="{{ url_for('index') }}" class="text-white text-lg font-semibold">Forest Trees</a>
+    <div class="space-x-4">
+      {% if session.username %}
+        <span class="text-white">Welcome, {{ session.username }}!</span>
+        <a href="{{ url_for('logout') }}" class="text-white hover:underline">Logout</a>
+      {% else %}
+        <a href="{{ url_for('login') }}" class="text-white hover:underline">Login</a>
+        <a href="{{ url_for('register') }}" class="text-white hover:underline">Register</a>
+      {% endif %}
+    </div>
+  </div>
+</nav>
+
+
+
   <!-- Header -->
   <header class="bg-green-600 p-6 shadow-lg">
     <div class="container mx-auto text-center">
@@ -24,83 +43,99 @@
   <main class="flex-grow container mx-auto mt-12 px-6">
     <div class="bg-white rounded-lg shadow-lg p-8">
       
-      <!-- File Upload Form -->
-      <form method="POST" enctype="multipart/form-data" name="form1" class="space-y-6 text-center">
-        <!-- Drag and Drop Area -->
-        <div id="drop-area" 
-             class="border-2 border-dashed border-green-600 rounded-lg p-12 text-center bg-gray-50 hover:bg-green-100 transition"
-             ondragover="handleDragOver(event)" 
-             ondragleave="handleDragLeave()" 
-             ondrop="handleDrop(event)">
-          <p class="text-lg text-gray-700">Drag & Drop your image here</p>
-          <p class="text-sm text-gray-500">or click the button below to upload</p>
-          <input type="file" name="file" id="imageUpload" accept="image/*" class="hidden" onchange="updatePreview()" multiple>
-          <label for="imageUpload" class="mt-4 inline-block px-6 py-3 bg-green-600 text-white font-semibold rounded-lg cursor-pointer hover:bg-green-700">
-            Select Image
-          </label>
-        </div>
+      <!-- Modify the file input in the form -->
+<form method="POST" enctype="multipart/form-data" name="form1" class="space-y-6 text-center">
+  <!-- Drag and Drop Area -->
+  <div id="drop-area" 
+       class="border-2 border-dashed border-green-600 rounded-lg p-12 text-center bg-gray-50 hover:bg-green-100 transition"
+       ondragover="handleDragOver(event)" 
+       ondragleave="handleDragLeave()" 
+       ondrop="handleDrop(event)">
+    <p class="text-lg text-gray-700">Drag & Drop your images here</p>
+    <p class="text-sm text-gray-500">or click the button below to upload</p>
+    <input type="file" name="files[]" id="imageUpload" accept="image/*" class="hidden" onchange="updatePreview()" multiple>    
+    <label for="imageUpload" class="mt-4 inline-block px-6 py-3 bg-green-600 text-white font-semibold rounded-lg cursor-pointer hover:bg-green-700">
+      Select Images
+    </label>
+  </div>
 
-        <!-- Image Preview -->
-        <div class="mt-6 text-center">
-          <img id="image-preview" class="hidden mx-auto rounded-lg shadow-md w-64 h-64 object-cover">
-        </div>
+  <!-- Image Preview Container -->
+  <div id="preview-container" class="mt-6 text-center grid grid-cols-1 md:grid-cols-3 gap-4 hidden">
+    <!-- Preview images will be dynamically added here -->
+  </div>
 
-        <!-- Detect Button -->
-        <div class="text-center">
-          <button type="submit" class="px-8 py-4 bg-green-600 text-white font-semibold text-lg rounded-full hover:bg-green-700">
-            Detect
-          </button>
-        </div>
-      </form>
+  <!-- Detect Button -->
+  <div class="text-center">
+    <button type="submit" class="px-8 py-4 bg-green-600 text-white font-semibold text-lg rounded-full hover:bg-green-700">
+      Detect All
+    </button>
+  </div>
+</form>
 
-      <!-- Result Image -->
-      <!-- <div class="mt-10 text-center">
-        <img id="my-image" style="display: none;" class="mx-auto rounded-lg shadow-lg" src="{{ image_path }}" />
-      </div> -->
-
-            <!-- Results Section -->
-      <div class="mt-8">
-        <h3 class="text-2xl font-semibold text-gray-700 text-center">Detection Results</h3>
-        
-        <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-6">
-          <!-- Species Result -->
-          <div class="bg-gray-50 p-6 rounded-lg shadow">
-            <h4 class="text-lg font-medium text-green-700">Detected Species</h4>
-            <pre id="species-result" class="text-gray-600 mt-2 whitespace-pre-wrap">
-              {% if detection_result is not none %}
-              Palm Trees Detected: {{ 'True' if detection_result else 'False' }}
-              {% else %}
-              Awaiting results...
-              {% endif %}
-            </pre>
+<!-- Results Section -->
+<div class="mt-8">
+  <h3 class="text-2xl font-semibold text-gray-700 text-center">Detection Results</h3>
+  
+  <div class="mt-4 grid grid-cols-1 md:grid-cols-1 lg:grid-cols-1 gap-6">
+    {% if results %}
+      {% for filename, result in results.items() %}
+        <div class="bg-gray-50 p-6 rounded-lg shadow">
+          <h4 class="text-lg font-medium text-green-700">{{ filename }}</h4>
+          
+          <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Original Detection Image -->
+            <div>
+              <h5 class="text-md font-medium text-green-600 mb-2">Species Detection</h5>
+              <img src="{{ result.detection_image_url }}" alt="Detection Result" class="mx-auto max-w-full rounded-lg shadow-md">
+            </div>
+            
+            <!-- Labeled Image with Age Information -->
+            <div>
+              <h5 class="text-md font-medium text-green-600 mb-2">Age Classification</h5>
+              <img src="{{ result.labeled_image_url }}" alt="Age Classification" class="mx-auto max-w-full rounded-lg shadow-md">
+            </div>
           </div>
-
-          <!-- Age Result -->
-          <div class="bg-gray-50 p-6 rounded-lg shadow">
-            <h4 class="text-lg font-medium text-green-700">Estimated Age</h4>
-            <pre class="text-gray-600 mt-2 whitespace-pre-wrap">
-              {% if ages %}
-                {% for age in ages %}
-                  • {{ age }}
-                {% endfor %}
+          
+          <div class="mt-4">
+            <p class="text-gray-600">Palm Trees Detected: {{ 'True' if result.detection_result else 'False' }}</p>
+            <div class="mt-2">
+              <p class="text-gray-600 font-medium">Age Estimations:</p>
+              {% if result.tree_data %}
+                <ul class="list-disc pl-5">
+                  {% for tree in result.tree_data %}
+                    <li>Tree {{ loop.index }}: {{ tree.age }}</li>
+                  {% endfor %}
+                </ul>
               {% else %}
-                Not available
+                <p class="text-gray-500">No age data available</p>
               {% endif %}
-            </pre>
+            </div>
           </div>
-
-
         </div>
+      {% endfor %}
+    {% endif %}
+  </div>
+</div>
 
-        <!-- Detection Image Styled as Full-width Box -->
-        {% if image_path %}
-        <div class="mt-6 bg-gray-50 p-6 rounded-lg shadow">
-          <h4 class="text-lg font-medium text-green-700 text-center mb-4">Results Image</h4>
-          <img src="{{ image_path }}" alt="Detection Result" class="mx-auto max-w-full rounded-lg shadow-md">
-        </div>
-        {% endif %}
-      </div>
 
+<!-- Add a legend above or below the results -->
+<div class="mt-4 mb-8 bg-white p-4 rounded-lg shadow">
+  <h4 class="text-md font-medium text-green-700 mb-2">Age Classification Legend:</h4>
+  <div class="flex flex-wrap gap-4">
+    <div class="flex items-center">
+      <div class="w-4 h-4 bg-green-500 mr-2"></div>
+      <span>Young</span>
+    </div>
+    <div class="flex items-center">
+      <div class="w-4 h-4 bg-yellow-500 mr-2"></div> <!-- Changed to yellow-500 for Middle-Aged -->
+      <span>Middle-Aged</span>
+    </div>
+    <div class="flex items-center">
+      <div class="w-4 h-4 bg-red-500 mr-2"></div>
+      <span>Old</span>
+    </div>
+  </div>
+</div>
 
     </div>
   </main>
@@ -112,46 +147,66 @@
     </div>
   </footer>
 
-  <!-- Script Section -->
-  <script>
-    function handleDragOver(event) {
-      event.preventDefault();
-      document.getElementById("drop-area").classList.add("bg-green-200");
-    }
+<!-- Update JavaScript to handle multiple files -->
+<script>
+  function handleDragOver(event) {
+    event.preventDefault();
+    document.getElementById("drop-area").classList.add("bg-green-200");
+  }
 
-    function handleDragLeave() {
-      document.getElementById("drop-area").classList.remove("bg-green-200");
-    }
+  function handleDragLeave() {
+    document.getElementById("drop-area").classList.remove("bg-green-200");
+  }
 
-    function handleDrop(event) {
-      event.preventDefault();
-      document.getElementById("drop-area").classList.remove("bg-green-200");
-      const fileInput = document.getElementById("imageUpload");
-      fileInput.files = event.dataTransfer.files;
-      updatePreview();
-    }
+  function handleDrop(event) {
+    event.preventDefault();
+    document.getElementById("drop-area").classList.remove("bg-green-200");
+    const fileInput = document.getElementById("imageUpload");
+    fileInput.files = event.dataTransfer.files;
+    updatePreview();
+  }
 
-    function updatePreview() {
-      const fileInput = document.getElementById("imageUpload");
-      const preview = document.getElementById("image-preview");
-
-      if (fileInput.files.length > 0) {
-        const file = fileInput.files[0];
+  function updatePreview() {
+    const fileInput = document.getElementById("imageUpload");
+    const previewContainer = document.getElementById("preview-container");
+    
+    // Clear previous previews
+    previewContainer.innerHTML = '';
+    
+    if (fileInput.files.length > 0) {
+      previewContainer.classList.remove("hidden");
+      
+      for (let i = 0; i < fileInput.files.length; i++) {
+        const file = fileInput.files[i];
         const reader = new FileReader();
-
-        reader.onload = function (e) {
-          preview.src = e.target.result;
-          preview.classList.remove("hidden");
+        
+        // Create preview element
+        const previewDiv = document.createElement('div');
+        previewDiv.className = 'relative';
+        
+        const previewImg = document.createElement('img');
+        previewImg.className = 'h-64 w-full object-cover rounded-lg shadow-md';
+        
+        reader.onload = function(e) {
+          previewImg.src = e.target.result;
         };
-
+        
         reader.readAsDataURL(file);
+        
+        // Add filename caption
+        const caption = document.createElement('p');
+        caption.className = 'mt-2 text-sm text-gray-600 truncate';
+        caption.textContent = file.name;
+        
+        previewDiv.appendChild(previewImg);
+        previewDiv.appendChild(caption);
+        previewContainer.appendChild(previewDiv);
       }
+    } else {
+      previewContainer.classList.add("hidden");
     }
-
-    document.getElementById("my-image").onload = function () {
-      this.style.display = "block";
-    };
-  </script>
+  }
+</script>
 
 </body>
 </html>
