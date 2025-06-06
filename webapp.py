@@ -27,8 +27,15 @@ app = Flask(__name__)
 app.secret_key = 'your_secret_key'
 
 # Database configuration
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqlconnector://root:@localhost/project_db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+# before the deployment/was working on the local host
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqlconnector://root:@localhost/project_db'
+
+# was replaced with:
+# from the following line:
+import os
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'mysql+mysqlconnector://root:@localhost/project_db')app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+# to the line above.
+
 db = SQLAlchemy(app)
 
 # User model
