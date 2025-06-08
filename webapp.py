@@ -212,8 +212,8 @@ def register():
         
         password_hash = generate_password_hash(password)
         new_user = User(username=username, email=email, password_hash=password_hash)
-        db.session.add(new_user)
-        db.session.commit()
+        db_session.add(new_user)
+        db_session.commit()
         
         flash('Registration successful! Please log in.', 'success')
         return redirect(url_for('login'))
@@ -361,8 +361,8 @@ def save_drone_path():
             speed=speed,
             gimbal_angle=gimbal_angle
         )
-        db.session.add(new_path)
-        db.session.commit()
+        db_session.add(new_path)
+        db_session.commit()
         
         # Save KMZ file if kml_content is provided
         if 'kml_content' in data:
@@ -379,7 +379,7 @@ def save_drone_path():
         logger.info(f"Path saved successfully for user_id {user_id}, path_id {new_path.id}")
         return jsonify({'message': 'Path saved successfully', 'path_id': new_path.id})
     except Exception as e:
-        db.session.rollback()
+        db_session.rollback()
         logger.error(f"Error saving path: {str(e)}")
         return jsonify({'error': f'Failed to save path: {str(e)}'}), 500
 
@@ -471,8 +471,8 @@ def optical_images():
                     detection_image_path=orig_result_path,
                     labeled_image_path=labeled_result_path
                 )
-                db.session.add(image_upload)
-                db.session.flush()  # Get image_upload.id before committing
+                db_session.add(image_upload)
+                db_session.flush()  # Get image_upload.id before committing
                 
                 # Create DetectionResult record (assuming "Palm Tree" is the species)
                 detection_result = DetectionResult(
@@ -480,8 +480,8 @@ def optical_images():
                     species="Palm Tree",
                     detection_count=len(bboxes)
                 )
-                db.session.add(detection_result)
-                db.session.flush()  # Get detection_result.id
+                db_session.add(detection_result)
+                db_session.flush()  # Get detection_result.id
                 
                 # Create AgeEstimation records
                 for age in ages:
@@ -489,12 +489,12 @@ def optical_images():
                         detection_result_id=detection_result.id,
                         age=age
                     )
-                    db.session.add(age_estimation)
+                    db_session.add(age_estimation)
                 
-                db.session.commit()
+                db_session.commit()
                 logger.info(f"Saved detection results for image {filename} for user_id {user_id}")
             except Exception as e:
-                db.session.rollback()
+                db_session.rollback()
                 logger.error(f"Error saving detection results for image {filename}: {str(e)}")
                 flash(f"Failed to save results for {filename}.", 'error')
             
@@ -520,7 +520,7 @@ def data_visualization():
     
     try:
         # Species Distribution (Pie Chart)
-        species_data = db.session.query(
+        species_data = db_session.query(
             DetectionResult.species,
             func.sum(DetectionResult.detection_count).label('total_count')
         ).join(ImageUpload).filter(
@@ -536,7 +536,7 @@ def data_visualization():
             species_counts = [0, 0]
         
         # Age Distribution (Bar Chart)
-        age_data = db.session.query(
+        age_data = db_session.query(
             AgeEstimation.age,
             func.count(AgeEstimation.id).label('age_count')
         ).join(DetectionResult).join(ImageUpload).filter(
@@ -559,7 +559,7 @@ def data_visualization():
         from dateutil.relativedelta import relativedelta
         
         # Get the earliest and latest dates to define the range
-        date_range = db.session.query(
+        date_range = db_session.query(
             func.min(ImageUpload.created_at).label('min_date'),
             func.max(ImageUpload.created_at).label('max_date')
         ).filter(ImageUpload.user_id == user_id).first()
@@ -580,7 +580,7 @@ def data_visualization():
             current_date += relativedelta(months=1)
         
         # Query tree counts by month
-        time_data = db.session.query(
+        time_data = db_session.query(
             func.date_format(ImageUpload.created_at, '%Y-%m').label('month'),
             func.sum(DetectionResult.detection_count).label('total_count')
         ).join(DetectionResult).filter(
