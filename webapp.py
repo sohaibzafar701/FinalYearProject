@@ -67,7 +67,7 @@ engine = create_engine(
     pool_timeout=30,
     pool_recycle=3600,
     connect_args={
-        'ssl_ca': '/opt/render/project/src/ca.pem',  # Path on Render
+        'ssl_ca': '/opt/render/project/src/isrgrootx1.pem',  # Path on Render
         'ssl_verify_cert': True
     }
 )
