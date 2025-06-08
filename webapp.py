@@ -128,77 +128,77 @@ with app.app_context():
 # Authentication routes
 
 
-# added /register route for deployment
-import logging
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(levelname)s: %(message)s')
+# # added /register route for deployment
+# import logging
+# logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(levelname)s: %(message)s')
 
-@app.route('/register', methods=['GET', 'POST'])
-def register():
-    logging.debug("Entering /register route, method=%s", request.method)
-    try:
-        if request.method == 'POST':
-            logging.debug("Processing register POST: %s", request.form)
-            username = request.form.get('username')
-            email = request.form.get('email')
-            password = request.form.get('password')
+# @app.route('/register', methods=['GET', 'POST'])
+# def register():
+#     logging.debug("Entering /register route, method=%s", request.method)
+#     try:
+#         if request.method == 'POST':
+#             logging.debug("Processing register POST: %s", request.form)
+#             username = request.form.get('username')
+#             email = request.form.get('email')
+#             password = request.form.get('password')
             
-            logging.debug("Registering user: %s, email: %s", username, email)
-            if not username or not email or not password:
-                logging.debug("Missing fields in form")
-                flash('All fields are required!', 'error')
-                return render_template('register.html')
+#             logging.debug("Registering user: %s, email: %s", username, email)
+#             if not username or not email or not password:
+#                 logging.debug("Missing fields in form")
+#                 flash('All fields are required!', 'error')
+#                 return render_template('register.html')
             
-            logging.debug("Checking for existing username or email")
-            if User.query.filter_by(username=username).first() or User.query.filter_by(email=email).first():
-                logging.debug("Username or email already exists")
-                flash('Username or email already exists!', 'error')
-                return render_template('register.html')
+#             logging.debug("Checking for existing username or email")
+#             if User.query.filter_by(username=username).first() or User.query.filter_by(email=email).first():
+#                 logging.debug("Username or email already exists")
+#                 flash('Username or email already exists!', 'error')
+#                 return render_template('register.html')
             
-            logging.debug("Generating password hash")
-            password_hash = generate_password_hash(password)
-            new_user = User(username=username, email=email, password_hash=password_hash)
-            logging.debug("Adding new user to session")
-            db.session.add(new_user)
-            logging.debug("Committing to database")
-            db.session.commit()
+#             logging.debug("Generating password hash")
+#             password_hash = generate_password_hash(password)
+#             new_user = User(username=username, email=email, password_hash=password_hash)
+#             logging.debug("Adding new user to session")
+#             db.session.add(new_user)
+#             logging.debug("Committing to database")
+#             db.session.commit()
             
-            logging.debug("Registration successful for %s", username)
-            flash('Registration successful! Please log in.', 'success')
-            return redirect(url_for('login'))
+#             logging.debug("Registration successful for %s", username)
+#             flash('Registration successful! Please log in.', 'success')
+#             return redirect(url_for('login'))
         
-        logging.debug("Rendering register.html for GET request")
-        return render_template('register.html')
-    except Exception as e:
-        logging.error("Error in /register: %s", str(e))
-        return "Internal Server Error", 500
+#         logging.debug("Rendering register.html for GET request")
+#         return render_template('register.html')
+#     except Exception as e:
+#         logging.error("Error in /register: %s", str(e))
+#         return "Internal Server Error", 500
 # added /register route for deployment
 
 
 # # commented old register for deployment
-# @app.route('/register', methods=['GET', 'POST'])
-# def register():
-#     if request.method == 'POST':
-#         username = request.form.get('username')
-#         email = request.form.get('email')
-#         password = request.form.get('password')
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        email = request.form.get('email')
+        password = request.form.get('password')
         
-#         if not username or not email or not password:
-#             flash('All fields are required!', 'error')
-#             return render_template('register.html')
+        if not username or not email or not password:
+            flash('All fields are required!', 'error')
+            return render_template('register.html')
         
-#         if User.query.filter_by(username=username).first() or User.query.filter_by(email=email).first():
-#             flash('Username or email already exists!', 'error')
-#             return render_template('register.html')
+        if User.query.filter_by(username=username).first() or User.query.filter_by(email=email).first():
+            flash('Username or email already exists!', 'error')
+            return render_template('register.html')
         
-#         password_hash = generate_password_hash(password)
-#         new_user = User(username=username, email=email, password_hash=password_hash)
-#         db.session.add(new_user)
-#         db.session.commit()
+        password_hash = generate_password_hash(password)
+        new_user = User(username=username, email=email, password_hash=password_hash)
+        db.session.add(new_user)
+        db.session.commit()
         
-#         flash('Registration successful! Please log in.', 'success')
-#         return redirect(url_for('login'))
+        flash('Registration successful! Please log in.', 'success')
+        return redirect(url_for('login'))
     
-#     return render_template('register.html')
+    return render_template('register.html')
     # commented old /register route for deployment
 
 @app.route('/login', methods=['GET', 'POST'])
