@@ -245,7 +245,7 @@ def index():
     return render_template("index.html")
 
 @app.route("/djipath")
-# @login_required
+@login_required
 def djipath():
     user_id = session['user_id']
     previous_paths = DronePath.query.filter_by(user_id=user_id).all()
@@ -268,7 +268,7 @@ def djipath():
     return render_template("djipath.html", previous_paths=previous_paths_data)
 
 @app.route("/save_drone_path", methods=['POST'])
-# @login_required
+@login_required
 def save_drone_path():
     data = request.get_json()
     user_id = session['user_id']
@@ -331,7 +331,7 @@ def save_drone_path():
         return jsonify({'error': f'Failed to save path: {str(e)}'}), 500
 
 @app.route("/download_kmz/<int:path_id>")
-# @login_required
+@login_required
 def download_kmz(path_id):
     user_id = session['user_id']
     
@@ -359,7 +359,7 @@ def download_kmz(path_id):
         return redirect(url_for('djipath'))
 
 @app.route("/optical-images", methods=["GET", "POST"])
-# @login_required
+@login_required
 def optical_images():
     if request.method == "POST":
         results_dict = {}
@@ -461,7 +461,7 @@ def optical_images():
     return render_template("optical-images.html", results=None)
 
 @app.route('/data-visualization')
-# @login_required
+@login_required
 def data_visualization():
     user_id = session['user_id']
     
@@ -574,7 +574,7 @@ def data_visualization():
         return render_template('data-visualization.html', chart_data=None)
 
 @app.route("/", methods=["GET", "POST"])
-# @login_required
+@login_required
 def predict_img():
     if request.method == "POST":
         results_dict = {}
@@ -613,12 +613,12 @@ def predict_img():
     return render_template("index.html", results=None)
 
 @app.route("/download/<filename>")
-# @login_required
+@login_required
 def download_result(filename):
     return send_from_directory(RESULT_FOLDER, filename)
 
 @app.route('/video_feed')
-# @login_required
+@login_required
 def video_feed():
     return Response(get_frame(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
@@ -649,7 +649,7 @@ def get_frame():
         yield b''
 
 @app.route('/batch-process', methods=['POST'])
-# @login_required
+@login_required
 def batch_process():
     if 'files[]' not in request.files:
         return jsonify({'error': 'No files uploaded'}), 400
