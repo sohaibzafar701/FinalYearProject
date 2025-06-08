@@ -42,7 +42,11 @@ logger = logging.getLogger(__name__)
 from image_processing import extract_features_from_bboxes, estimate_age, extract_features_and_estimate_age
 
 app = Flask(__name__)
-app.secret_key = 'your_secret_key'
+app.secret_key = os.getenv('SECRET_KEY', 'default-secret-key-for-local')  # Use Render's SECRET_KEY or local fallback
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'mysql+mysqlconnector://root:@localhost/test')
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['FLASK_ENV'] = os.getenv('FLASK_ENV', 'development')  # Default to development locally
+
 
 # Database configuration
 # before the deployment/was working on the local host
