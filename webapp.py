@@ -33,7 +33,8 @@ app.secret_key = 'your_secret_key'
 # was replaced with:
 # from the following line:
 import os
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'mysql+mysqlconnector://root:@localhost/project_db')app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'mysql+mysqlconnector://root:@localhost/project_db')
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 # to the line above.
 
 db = SQLAlchemy(app)
