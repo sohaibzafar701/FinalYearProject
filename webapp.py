@@ -2,6 +2,24 @@ from flask import Flask, render_template, request, url_for, Response, send_from_
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 import os
+
+# // added for deployment
+
+import platform
+if platform.system() == "Windows":
+    import pycaw
+    import comtypes
+    import PyAutoGUI
+    import PyGetWindow
+    import PyMsgBox
+    import PyRect
+    import PyScreeze
+    import MouseInfo
+    import pytweening
+else:
+    print("Windows-specific packages skipped on Linux")
+
+# //added for deployment
 import cv2
 import time
 import torch
