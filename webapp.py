@@ -59,6 +59,22 @@ app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'mysql+mysqlco
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 # to the line above.
 
+# Configure SQLAlchemy engine with SSL
+engine = create_engine(
+    app.config['SQLALCHEMY_DATABASE_URI'],
+    pool_size=5,
+    max_overflow=10,
+    pool_timeout=30,
+    pool_recycle=3600,
+    connect_args={
+        'ssl_ca': '/opt/render/project/src/ca.pem',  # Path on Render
+        'ssl_verify_cert': True
+    }
+)
+db_session = scoped_session(sessionmaker(autocommit=False, autoflush=False, bind=engine))
+app.db_session = db_session
+
+
 db = SQLAlchemy(app)
 
 # User model
@@ -205,23 +221,60 @@ def register():
     return render_template('register.html')
     # commented old /register route for deployment
 
+# @app.route('/login', methods=['GET', 'POST'])
+# def login():
+#     if request.method == 'POST':
+#         username = request.form.get('username')
+#         password = request.form.get('password')
+        
+#         user = User.query.filter_by(username=username).first()
+#         if user and check_password_hash(user.password_hash, password):
+#             session['user_id'] = user.id
+#             session['username'] = user.username
+#             flash('Login successful!', 'success')
+#             return redirect(url_for('index'))
+#         else:
+#             flash('Invalid username or password!', 'error')
+#             return render_template('login.html')
+    
+#     return render_template('login.html')
+
+# login routre new
+# Login route with debugging
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
-        
-        user = User.query.filter_by(username=username).first()
-        if user and check_password_hash(user.password_hash, password):
-            session['user_id'] = user.id
-            session['username'] = user.username
-            flash('Login successful!', 'success')
-            return redirect(url_for('index'))
-        else:
-            flash('Invalid username or password!', 'error')
+    logging.debug("Entering /login route, method=%s", request.method)
+    try:
+        if request.method == 'POST':
+            logging.debug("Processing login POST: %s", request.form)
+            username = request.form.get('username')
+            password = request.form.get('password')
+            logging.debug("Attempting login for user: %s", username)
+            user = User.query.filter_by(username=username).first()
+            if user:
+                logging.debug("User found, checking password")
+                if check_password_hash(user.password_hash, password):
+                    logging.debug("Password correct, logging in user: %s", username)
+                    session['user_id'] = user.id
+                    return redirect(url_for('index'))
+                else:
+                    logging.debug("Incorrect password for user: %s", username)
+            else:
+                logging.debug("User not found: %s", username)
+            flash('Invalid username or password', 'error')
             return render_template('login.html')
-    
-    return render_template('login.html')
+        logging.debug("Rendering login.html for GET request")
+        return render_template('login.html')
+    except Exception as e:
+        logging.error("Error in /login: %s", str(e))
+        return "Internal Server Error", 500
+
+# Teardown to clean up session
+@app.teardown_appcontext
+def shutdown_session(exception=None):
+    db_session.remove()
+
+
 
 @app.route('/logout')
 def logout():
